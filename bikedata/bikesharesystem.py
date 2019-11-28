@@ -2,7 +2,8 @@ from .daemon_functions import *
 from .query_functions import *
 from .bikesharesystemdata import BikeShareSystemData
 
-import pytz
+import sys
+
 
 class BikeShareSystem(object):
     def __init__(self,*args,**kwargs):
@@ -136,6 +137,8 @@ class BikeShareSystem(object):
         self.data = BikeShareSystemData(workingdir=self.workingdir)
 
     def _load_conf(self):
+        sys.path = [self.workingdir] + sys.path
+        
         try:
             import conf
         except:
