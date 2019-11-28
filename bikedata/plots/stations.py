@@ -13,7 +13,7 @@ def plot_stations(bs,date1,date2=None):
         date2 = date1
     
     color=sns.color_palette()[0]
-    
+    color2=sns.color_palette()[1]
     
     f,ax = plt.subplots(subplot_kw={'projection': ccrs.epsg(3857)},figsize=(7,7))
 
@@ -41,10 +41,11 @@ def plot_stations(bs,date1,date2=None):
     sdf.crs = {'init' :'epsg:4326'}
     sdf = sdf.to_crs({'init': 'epsg:3857'})
     sdf.plot(ax=ax,markersize='trips',color=color,alpha=0.7)
+    sdf[sdf.trips==0].plot(ax=ax,color=color2,alpha=0.7,markersize=10,marker='x')
     
     l1 = ax.scatter([0],[0], s=10, edgecolors='none',color=color,alpha=0.7)
     l2 = ax.scatter([0],[0], s=100, edgecolors='none',color=color,alpha=0.7)
-    l3 = ax.scatter([0],[0], s=10, marker='x',edgecolors='none',color=color,alpha=0.7)
+    l3 = ax.scatter([0],[0], s=10, marker='x',edgecolors='none',color=color2,alpha=0.7)
 
     labels=['0','10','100']
     ax.legend([l3,l1,l2],labels,title=f'Station Activity')
