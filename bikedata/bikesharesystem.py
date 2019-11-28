@@ -122,12 +122,15 @@ class BikeShareSystem(object):
     def run(self, **kwargs):        
         run_persistent_query(self, **kwargs)
         
-    def monitor(self,save_backups=False,save_interval=600,query_interval=60,weather=True):        
+    def monitor(self, save_backups=False,save_interval=600,
+                         query_interval=60,weather=True,
+                         track_stations=True, track_bikes=True, bike_method='standard'): 
+        
         run_persistent_query(self,save_backups=save_backups,
                              save_interval=save_interval,query_interval=query_interval,
-                             weather=weather)
+                             weather=weather, track_stations=track_stations,
+                             track_bikes=track_bikes,bike_method=bike_method)
     
-  
 
     def load_data(self):
         self.data = BikeShareSystemData(workingdir=self.workingdir)

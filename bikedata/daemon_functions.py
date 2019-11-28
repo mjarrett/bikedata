@@ -30,6 +30,31 @@ def make_returned_df(df):
 
     return returneddf
 
+
+def make_taken_free_bikes(pdf):
+    pdf = pdf.fillna(0)
+    pdf[pdf!=0] = 1
+    ddf = pdf.copy()
+    for col in pdf.columns:
+        ddf[col] = pdf[col] - pdf[col].shift(-1)
+    takendf = ddf.fillna(0.0).astype(int)
+    takendf[takendf>0] = 0
+    takendf = takendf*-1
+    
+    return takendf
+
+def make_returned_free_bikes(pdf):
+    pdf = pdf.fillna(0)
+    pdf[pdf!=0] = 1
+    ddf = pdf.copy()
+    for col in pdf.columns:
+        ddf[col] = pdf[col] - pdf[col].shift(-1)
+    returneddf = ddf.fillna(0.0).astype(int)
+    returneddf[returneddf<0] = 0
+    
+    return returneddf
+
+
 def get_free_bike_trips(s):
 
     s = s.dropna()
@@ -85,53 +110,63 @@ def get_free_bike_trips(s):
     return tripsdf
 
 
-def run_persistent_query(bs, save_backups=False,save_interval=600,query_interval=60,weather=True):
+def run_persistent_query(bs, save_backups=False,save_interval=600,
+                         query_interval=60,weather=True,
+                         track_stations=True, track_bikes=True, bike_method='standard'):
 
-        
     try:
-        ddf = pd.read_csv('station_data.tmp',dtype={'station_id':str}, parse_dates=['time'], index_col=0)
-        ddf = ddf[ddf.time > pd.Timestamp(dt.datetime.utcnow()).tz_localize('UTC') - dt.timedelta(seconds=60*10)]
+        os.mkdir(f'{bs.workingdir}/data/')
+    except:
+        pass
+    
+    try:
+        ddf = pd.read_csv(f'{bs.workingdir}/data/station_data.tmp',dtype={'station_id':str}, parse_dates=['time'], index_col=0)
+        ddf = ddf[ddf.time > now() - dt.timedelta(seconds=60*10)]
     except:
         ddf = pd.DataFrame()
         
     try:
-        bdf = pd.read_csv('free_bikes.tmp',dtype={'bike_id':str}, parse_dates=['time'])
+        bdf = pd.read_csv(f'{bs.workingdir}/data/free_bikes.tmp',dtype={'bike_id':str}, parse_dates=['time'])
         bdf = bdf.set_index('time')
-        bdf = bdf[bdf.index > pd.Timestamp(dt.datetime.utcnow()).tz_localize('UTC') - dt.timedelta(seconds=60*10)]
+        bdf = bdf[bdf.index > now() - dt.timedelta(seconds=60*10)]
     except:
         bdf = pd.DataFrame()
     
-    querytime = pd.Timestamp(dt.datetime.utcnow()).tz_localize('UTC')
-    savetime = pd.Timestamp(dt.datetime.utcnow()).tz_localize('UTC') + dt.timedelta(seconds=save_interval)
+    querytime = now()
+    savetime = now() + dt.timedelta(seconds=save_interval)
     
     while True:
         
-        if pd.Timestamp(dt.datetime.utcnow()).tz_localize('UTC') < querytime:
+        if now() < querytime:
             continue
         else:
-            querytime = pd.Timestamp(dt.datetime.utcnow()).tz_localize('UTC') + dt.timedelta(seconds=query_interval)
+            querytime = now() + dt.timedelta(seconds=query_interval)
         
-#         log("Query API")
-        station_query = bs.query_stations()
-        ddf = pd.concat([ddf,station_query], sort=True)
-        ddf.reset_index().to_csv(f'station_data.tmp', index=False)
+#        log("Query API")
+
+        if track_stations:
+            station_query = bs.query_stations()
+            ddf = pd.concat([ddf,station_query], sort=True)
+            if len(ddf) > 0:
+                ddf.reset_index().to_csv(f'{bs.workingdir}/data/station_data.tmp', index=False)
 
 
-        bike_query = bs.query_bikes()
-        bdf = pd.concat([bdf, bike_query], sort=True)
-        
-        if len(bdf) > 0:
-            bdf.reset_index().to_csv(f'free_bikes.tmp', index=False)
+        if track_bikes:
+            bike_query = bs.query_bikes()
+            bdf = pd.concat([bdf, bike_query], sort=True)
+
+            if len(bdf) > 0:
+                bdf.reset_index().to_csv(f'{bs.workingdir}/data/free_bikes.tmp', index=False)
         
         ## Periodically update CSV files 
-        if pd.Timestamp(dt.datetime.utcnow()).tz_localize('UTC') < savetime:
+        if now() < savetime:
             continue
         else:
             
             log("Update saved files")
-            savetime = pd.Timestamp(dt.datetime.utcnow()).tz_localize('UTC') + dt.timedelta(seconds=save_interval)
+            savetime = now() + dt.timedelta(seconds=save_interval)
             hour = dt.datetime.utcnow().hour         
-            date_str = pd.Timestamp(dt.datetime.utcnow()).tz_localize('UTC').strftime('%Y%m%d%H%M')
+            date_str = now().strftime('%Y%m%d%H%M')
             
             
             # Load data
@@ -139,9 +174,9 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,query_interval
             
             
             ## Update stations csv
-
-            bs.data.stations = pd.concat([bs.data.stations,bs.query_station_info()])
-            bs.data.stations = bs.data.stations.drop_duplicates(subset=['station_id'])
+            if track_stations:
+                bs.data.stations = pd.concat([bs.data.stations,bs.query_station_info()])
+                bs.data.stations = bs.data.stations.drop_duplicates(subset=['station_id'])
             
             ## Update weather csv
             if weather:
@@ -169,10 +204,10 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,query_interval
             
             ## Update taken dataframe
             
-            if len(ddf) > 0:
+            if track_stations and len(ddf) > 0:
                 
                 if save_backups:
-                    os.rename('station_data.tmp',f'station_data{date_str}.csv')
+                    os.rename(f'{bs.workingdir}/data/station_data.tmp',f'{bs.workingdir}/data/station_data{date_str}.csv')
                 
                 
 
@@ -193,48 +228,56 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,query_interval
                 #thdf = thdf.reindex(indx).interpolate(method='time').astype(int)
                 #thdf.index.name = 'time'
                 
-  
-                
-            else:
-                log("Empty station tracking dataframe")
+                ## Keep the last 5 minutes of station queries
+                if len(ddf) > 0:
+                    ddf = ddf[ddf.index > now() - dt.timedelta(minutes=5)]
+
                 
                 
             ## Process free bike trips
-            if len(bdf) > 0:
+            if track_bikes and len(bdf) > 0:
                 
                 if save_backups:
-                    os.rename('free_bikes.tmp',f'free_bikes{date_str}.csv')
+                    os.rename(f'{bs.workingdir}/data/free_bikes.tmp',f'{bs.workingdir}/data/free_bikes{date_str}.csv')
                 
 
-                    
                 def pivot(bdf):
                     bdf['coords'] = list(zip(bdf.lat,bdf.lon))
                     pdf = pd.pivot_table(bdf, values='coords',index='time',columns='bike_id', aggfunc='first')
                     return pdf
-                
+
                 pdf = pivot(bdf)
-                
-                for col in pdf.columns:
-                    bs.data.free_bike_trips = pd.concat([bs.data.free_bike_trips, get_free_bike_trips(pdf[col])])
+
+
+                if bike_method == 'standard':
+                    tdf = make_taken_free_bikes(pdf)
+                    bs.data.taken_bikes_hourly = pd.concat([bs.data.taken_bikes_hourly,tdf], sort=True)
+                    bs.data.taken_bikes_hourly = bs.data.taken_bikes_hourly.groupby(pd.Grouper(freq='H')).sum() 
                     
-                if len(bs.data.free_bike_trips) > 0:
-                    bs.data.free_bike_trips = bs.data.free_bike_trips.drop_duplicates(subset=['bike_id','time_start'], keep='last')
-                    bs.data.free_bike_trips = bs.data.free_bike_trips.drop_duplicates(subset=['bike_id','time_end'], keep='first')
+                    rdf = make_returned_free_bikes(pdf)
+                    bs.data.returned_bikes_hourly = pd.concat([bs.data.returned_bikes_hourly,tdf], sort=True)
+                    bs.data.returned_bikes_hourly = bs.data.returned_bikes_hourly.groupby(pd.Grouper(freq='H')).sum() 
+
+                elif bike_method == 'track':
+                    for col in pdf.columns:
+                        bs.data.free_bike_trips = pd.concat([bs.data.free_bike_trips, get_free_bike_trips(pdf[col])])
+
+                    if len(bs.data.free_bike_trips) > 0:
+                        bs.data.free_bike_trips = bs.data.free_bike_trips.drop_duplicates(subset=['bike_id','time_start'], keep='last')
+                        bs.data.free_bike_trips = bs.data.free_bike_trips.drop_duplicates(subset=['bike_id','time_end'], keep='first')
                     
-            else:
-                log("Empty bike tracking dataframe")
+
             
 
-            ## Keep the last bike queries within the last 30 minutes
-            if len(bdf) > 0:
-                bdf = bdf[bdf.index > pd.Timestamp(dt.datetime.utcnow()).tz_localize('UTC') - dt.timedelta(minutes=30)]
-            ## Keep the last 5 minutes of station queries
-            if len(ddf) > 0:
-                ddf = ddf[ddf.index > pd.Timestamp(dt.datetime.utcnow()).tz_localize('UTC') - dt.timedelta(minutes=5)]
+                ## Keep the last bike queries within the last 30 minutes
+                if len(bdf) > 0:
+                    bdf = bdf[bdf.index > now() - dt.timedelta(minutes=30)]
+
 
             ## Save and reset data
             bs.data.save()
             bs.data.clear()
 
             
-
+def now():
+    return pd.Timestamp(dt.datetime.utcnow()).tz_localize('UTC')
