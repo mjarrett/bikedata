@@ -34,9 +34,9 @@ def plot_stations(bs,date1,date2=None):
     thdf = thdf[date1:date2]
     thdf = thdf.sum(0).reset_index()
 
-    thdf.columns = ['station_id','trips']
+    thdf.columns = ['name','trips']
     
-    sdf = pd.merge(sdf,thdf,how='inner',on='station_id')
+    sdf = pd.merge(sdf,thdf,how='inner',on='name')
     sdf = geopandas.GeoDataFrame(sdf)
     sdf.crs = {'init' :'epsg:4326'}
     sdf = sdf.to_crs({'init': 'epsg:3857'})
