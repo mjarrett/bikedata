@@ -7,6 +7,8 @@ class BikeShareSystemData(object):
         
         self.load()
         
+        self.stationxw = self.stations[['name','station_id']].set_index('station_id').to_dict()['name']
+        self._clean = False
         
     def load(self):
         self.stations = load_stations_csv(self)
@@ -17,7 +19,23 @@ class BikeShareSystemData(object):
         self.free_bike_trips = load_free_bikes_csv(self) 
         self.weather = load_weather_csv(self)
         
+    
+    def clean(self,tz='UTC'):
+        """
+        Convert data object to local timezone and human readable station names
+        """
+        self.taken_hourly = cleaner(self.taken_hourly,self.stationxw,tz)
+        self.returned_hourly = cleaner(self.returned_hourly,self.stationxw,tz)
+        self.taken_bikes_hourly = cleaner(self.taken_bikes_hourly,self.stationxw,tz)
+        self.returned_bikes_hourly = cleaner(self.returned_bikes_hourly,self.stationxw,tz)
+        self.free_bike_trips = cleaner(self.free_bike_trips,self.stationxw,tz)
+        self.weather = cleaner(self.weather,self.stationxw,tz)
+        self._clean = True
+        
     def save(self):
+        
+        if self._clean:
+            raise ValueError("Can't save dataframes: they've been converted to non-standard format")
         
         try:
             os.mkdir(f'{self.workingdir}/data/')
@@ -99,3 +117,13 @@ def load_weather_csv(bsd):
     except:
         weatherdf = pd.DataFrame()
     return weatherdf
+
+
+def cleaner(df,xw,tz):
+    try:
+        df = df.rename(columns=xw)
+        df.index = df.index.tz_convert(tz)
+        return df
+    except:
+        return pd.DataFrame()
+        pass

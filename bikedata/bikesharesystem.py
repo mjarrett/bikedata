@@ -124,7 +124,7 @@ class BikeShareSystem(object):
         run_persistent_query(self, **kwargs)
         
     def monitor(self, save_backups=False,save_interval=600,
-                         query_interval=60,weather=True,
+                         query_interval=60,weather=False,
                          track_stations=True, track_bikes=True, bike_method='standard'): 
         
         run_persistent_query(self,save_backups=save_backups,
@@ -133,8 +133,14 @@ class BikeShareSystem(object):
                              track_bikes=track_bikes,bike_method=bike_method)
     
 
-    def load_data(self):
+    def load_data(self,clean=False):
         self.data = BikeShareSystemData(workingdir=self.workingdir)
+        if clean:
+            self.data.clean(self.tz)
+            
+    def now(self):
+        return pd.Timestamp(dt.datetime.utcnow()).tz_localize('UTC').tz_convert(self.tz)
+    
 
     def _load_conf(self):
         sys.path = [self.workingdir] + sys.path
@@ -144,6 +150,11 @@ class BikeShareSystem(object):
         except:
             return
         
+        
+        try:
+            self.DARKSKY_KEY = conf.DARKSKY_KEY
+        except:
+            pass    
         try:
             self.MAPBOX_TOKEN = conf.MAPBOX_TOKEN
         except:

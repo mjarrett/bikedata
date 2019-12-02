@@ -177,6 +177,7 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,
             if track_stations:
                 bs.data.stations = pd.concat([bs.data.stations,bs.query_station_info()])
                 bs.data.stations = bs.data.stations.drop_duplicates(subset=['station_id'])
+                bs.data.stations['active'] = bs.data.stations.station_id.isin(bs.query_stations().station_id)
             
             ## Update weather csv
             if weather:
