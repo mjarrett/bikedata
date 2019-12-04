@@ -6,8 +6,11 @@ class BikeShareSystemData(object):
         self.workingdir = workingdir
         
         self.load()
-        
-        self.stationxw = self.stations[['name','station_id']].set_index('station_id').to_dict()['name']
+     
+        try:
+            self.stationxw = self.stations[['name','station_id']].set_index('station_id').to_dict()['name']
+        except:
+            self.stationxw = None
         self._clean = False
         
     def load(self):
@@ -32,9 +35,9 @@ class BikeShareSystemData(object):
         self.weather = cleaner(self.weather,self.stationxw,tz)
         self._clean = True
         
-    def save(self):
+    def save(self,force=False):
         
-        if self._clean:
+        if self._clean and not force:
             raise ValueError("Can't save dataframes: they've been converted to non-standard format")
         
         try:
