@@ -55,7 +55,7 @@ def plot_hourly_weather(bs,date1,date2,ax=None):
     ax.tick_params(axis='x',labelrotation=45)
     ax2.tick_params(axis='x',labelrotation=45)
     
-    ax.text(0,-1.6,'Powered by Dark Sky: https://darksky.net/poweredby/',transform=ax.transAxes,fontdict={'color':'grey','style':'italic','family':'serif','size':8})
+    ax.text(0,-2.6,'Powered by Dark Sky: https://darksky.net/poweredby/',transform=ax.transAxes,fontdict={'color':'grey','style':'italic','family':'serif','size':8})
     
     
     return ax,ax2
