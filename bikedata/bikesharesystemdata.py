@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import geopandas
 
 class BikeShareSystemData(object):
     def __init__(self,workingdir='./'):
@@ -19,9 +20,10 @@ class BikeShareSystemData(object):
         self.returned_hourly = load_returned_hourly_csv(self)
         self.taken_bikes_hourly = load_taken_bikes_hourly_csv(self)
         self.returned_bikes_hourly = load_returned_bikes_hourly_csv(self)
-        self.free_bike_trips = load_free_bikes_csv(self) 
+        self.taken_bikes_grid_hourly = load_taken_bikes_grid_hourly_csv(self)
+        self.returned_bikes_grid_hourly = load_returned_bikes_grid_hourly_csv(self)
         self.weather = load_weather_csv(self)
-        
+        self.grid  = load_grid(self)
     
     def clean(self,tz='UTC'):
         """
@@ -31,7 +33,8 @@ class BikeShareSystemData(object):
         self.returned_hourly = cleaner(self.returned_hourly,self.stationxw,tz)
         self.taken_bikes_hourly = cleaner(self.taken_bikes_hourly,self.stationxw,tz)
         self.returned_bikes_hourly = cleaner(self.returned_bikes_hourly,self.stationxw,tz)
-        self.free_bike_trips = cleaner(self.free_bike_trips,self.stationxw,tz)
+        self.taken_bikes_grid_hourly = cleaner(self.taken_bikes_grid_hourly,self.stationxw,tz)
+        self.returned_bikes_grid_hourly = cleaner(self.returned_bikes_grid_hourly,self.stationxw,tz)
         self.weather = cleaner(self.weather,self.stationxw,tz)
         self._clean = True
         
@@ -56,8 +59,10 @@ class BikeShareSystemData(object):
             self.taken_bikes_hourly.reset_index().to_csv(f'{self.workingdir}/data/taken_bikes_hourly.csv', index=False)
         if len(self.returned_bikes_hourly) > 0:
             self.returned_bikes_hourly.reset_index().to_csv(f'{self.workingdir}/data/returned_bikes_hourly.csv', index=False)
-        if len(self.free_bike_trips) > 0:
-            self.free_bike_trips.to_csv(f'{self.workingdir}/data/free_bike_trips.csv', index=False)
+        if len(self.taken_bikes_grid_hourly) > 0:
+            self.taken_bikes_grid_hourly.reset_index().to_csv(f'{self.workingdir}/data/taken_bikes_grid_hourly.csv', index=False)
+        if len(self.returned_bikes_grid_hourly) > 0:
+            self.returned_bikes_grid_hourly.reset_index().to_csv(f'{self.workingdir}/data/returned_bikes_grid_hourly.csv', index=False)
         if len(self.weather) > 0:
             self.weather.reset_index().to_csv(f'{self.workingdir}/data/weather.csv',index=False)
         
@@ -105,14 +110,32 @@ def load_returned_bikes_hourly_csv(bsd):
         rhdf = pd.DataFrame()
     return rhdf
 
-def load_free_bikes_csv(bsd):
+
+
+def load_taken_bikes_grid_hourly_csv(bsd):
     try:
-        bikesdf = pd.read_csv(f'{bsd.workingdir}/data/free_bike_trips.csv',parse_dates=['time_start','time_end'],dtype={'bike_id':str})
+        thdf = pd.read_csv(f'{bsd.workingdir}/data/taken_bikes_grid_hourly.csv',index_col=0,parse_dates=['time'])
     except:
-        bikesdf = pd.DataFrame()
-    return bikesdf 
+        thdf = pd.DataFrame()
+    return thdf
+
+def load_returned_bikes_grid_hourly_csv(bsd):
+    try:
+        rhdf = pd.read_csv(f'{bsd.workingdir}/data/returned_bikes_grid_hourly.csv',index_col=0,parse_dates=['time'])
+    except:
+        rhdf = pd.DataFrame()
+    return rhdf
 
 
+
+def load_grid(bsd):
+    try:
+        gdf = geopandas.read_file(f'{bsd.workingdir}/data/city_grid.shp')
+        gdf.crs = {'init' :'epsg:3857'}
+        gdf.FID = gdf.FID.astype(int)
+        return gdf
+    except:
+        return None
 
 def load_weather_csv(bsd):
     try:
@@ -130,3 +153,4 @@ def cleaner(df,xw,tz):
     except:
         return pd.DataFrame()
         pass
+    

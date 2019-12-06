@@ -31,88 +31,89 @@ def make_returned_df(df):
     return returneddf
 
 
-def make_taken_free_bikes(pdf):
-    pdf = pdf.fillna(0)
-    pdf[pdf!=0] = 1
+def make_taken_free_bikes(df):
+    # Count how many bikes are reported at each query time
+    df = df['bike_id'].groupby(df.index).agg(lambda x: len(set(x.values)))
+    # Count the change in reported bikes at each query time
+    df = df - df.shift(1)
+    
+    takendf = df.fillna(0.0).astype(int)
+    takendf[takendf>0] = 0
+    takendf = takendf*-1
+    takendf.name = 'trips'
+    return takendf
+
+def make_returned_free_bikes(df):
+    # Count how many bikes are reported at each query time
+    df = df['bike_id'].groupby(df.index).agg(lambda x: len(set(x.values)))
+    # Count the change in reported bikes at each query time
+    df = df - df.shift(1)
+    returneddf = df.fillna(0.0).astype(int)
+    returneddf[returneddf<0] = 0
+    returneddf.name = 'trips'
+    return returneddf
+
+
+def make_taken_free_bikes_grid(df,grid):
+    
+    df = df.reset_index().drop_duplicates(['bike_id','time']).set_index('time')
+    df['coords'] = list(zip(df.lat,df.lon))
+    
+    
+    gdf = geopandas.GeoDataFrame(df)
+
+    gdf['geometry'] = geopandas.points_from_xy(gdf.lon,gdf.lat)
+
+    gdf.crs = {'init' :'epsg:4326'}
+    gdf = gdf.to_crs({'init': 'epsg:3857'}) 
+    
+    # Merge grid and bikes so that each bike has the FID of a grid. If not in the city grid,
+    # set FID = -1 
+    mdf = geopandas.sjoin(grid,gdf.reset_index(),op='contains',how='right')    
+    mdf.FID = mdf.FID.fillna(-1).astype(int)
+    
+    pdf = pd.pivot_table(mdf,values='coords',index='time',columns='FID',aggfunc='count')
+    
     ddf = pdf.copy()
     for col in pdf.columns:
         ddf[col] = pdf[col] - pdf[col].shift(-1)
     takendf = ddf.fillna(0.0).astype(int)
     takendf[takendf>0] = 0
     takendf = takendf*-1
+
+    takendf.columns = takendf.columns.astype(str)
     
     return takendf
 
-def make_returned_free_bikes(pdf):
-    pdf = pdf.fillna(0)
-    pdf[pdf!=0] = 1
+def make_returned_free_bikes_grid(df,grid):
+    
+    df = df.reset_index().drop_duplicates(['bike_id','time']).set_index('time')
+    df['coords'] = list(zip(df.lat,df.lon))
+    gdf = geopandas.GeoDataFrame(df)
+
+    gdf['geometry'] = geopandas.points_from_xy(gdf.lon,gdf.lat)
+
+    gdf.crs = {'init' :'epsg:4326'}
+    gdf = gdf.to_crs({'init': 'epsg:3857'}) 
+    
+    # Merge grid and bikes so that each bike has the FID of a grid. If not in the city grid,
+    # set FID = -1 
+    mdf = geopandas.sjoin(grid,gdf.reset_index(),op='contains',how='right')    
+    mdf.FID = mdf.FID.fillna(-1).astype(int)
+    
+    pdf = pd.pivot_table(mdf,values='coords',index='time',columns='FID',aggfunc='count')
+    
     ddf = pdf.copy()
     for col in pdf.columns:
         ddf[col] = pdf[col] - pdf[col].shift(-1)
     returneddf = ddf.fillna(0.0).astype(int)
     returneddf[returneddf<0] = 0
-    
+    returneddf.columns = returneddf.columns.astype(str)
     return returneddf
-
-
-def get_free_bike_trips(s):
-
-    s = s.dropna()
-    xs = s.map(lambda x: x[1])
-    ys = s.map(lambda x: x[0])
-    
-    bike_id = s.name
-    
-    bdf = geopandas.GeoDataFrame(s,geometry=geopandas.points_from_xy(xs, ys), crs={'init':'epsg:4326'})
-    bdf.columns = ['coords','geometry']
-
-    bdf['geometry'] = bdf['geometry'].to_crs(epsg=26910)
-
-    bdf['d_from'] = bdf.distance(bdf.shift(1))
-    bdf['d_to'] = bdf.distance(bdf.shift(-1))
-    bdf[['d_from','d_to']] = bdf[['d_from','d_to']].fillna(0).astype(int)
-
-    # Ignore movement less than 50 meters
-    bdf.loc[bdf['d_from']<50, 'd_from'] = 0 
-    bdf.loc[bdf['d_to']<50, 'd_to'] = 0 
-
-    bdf['trip_start'] = False
-    bdf.loc[(bdf['d_from']==0) & (bdf['d_to'] > 0),'trip_start'] = True
-
-    bdf['trip_end'] = False
-    bdf.loc[(bdf['d_to']==0) & (bdf['d_from'] > 0),'trip_end'] = True
-
-    idx_false_start = (bdf['trip_start'] == True) & (bdf['trip_end'].shift(1) == True) 
-    idx_false_end = (bdf['trip_end'] == True) & (bdf['trip_start'].shift(-1) == True)
-
-    bdf.loc[idx_false_start,'trip_start'] = False
-    bdf.loc[idx_false_end,'trip_end'] = False
-
-    starts = bdf[bdf.trip_start].reset_index()
-    ends = bdf[bdf.trip_end].reset_index()
-
-    starts['distance'] = starts.distance(ends)
-    starts['bike_id'] = bike_id
-    
-    starts = starts.rename(columns={'time':'time_start','coords':'coords_start'})
-    ends   = ends.rename(columns={'time':'time_end','coords':'coords_end'})
-
-    tripsdf = pd.concat([starts.loc[:,['time_start','coords_start', 'distance','bike_id']], 
-                         ends.loc[:,['time_end','coords_end']]], 
-                        axis=1)
-    tripsdf['lat_start'] = tripsdf['coords_start'].map(lambda x: x[0])
-    tripsdf['lon_start'] = tripsdf['coords_start'].map(lambda x: x[1])
-    tripsdf['lat_end'] = tripsdf['coords_end'].map(lambda x: x[0])
-    tripsdf['lon_end'] = tripsdf['coords_end'].map(lambda x: x[1])
-    del tripsdf['coords_start']
-    del tripsdf['coords_end']
-    
-    return tripsdf
-
 
 def run_persistent_query(bs, save_backups=False,save_interval=600,
                          query_interval=60,weather=True,
-                         track_stations=True, track_bikes=True, bike_method='standard'):
+                         track_stations=True, track_bikes=True):
 
     try:
         os.mkdir(f'{bs.workingdir}/data/')
@@ -175,7 +176,7 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,
             
             ## Update stations csv
             if track_stations:
-                bs.data.stations = pd.concat([bs.data.stations,bs.query_station_info()])
+                bs.data.stations = pd.concat([bs.data.stations,bs.query_station_info()],sort=True)
                 bs.data.stations = bs.data.stations.drop_duplicates(subset=['station_id'])
                 bs.data.stations['active'] = bs.data.stations.station_id.isin(bs.query_stations().station_id)
             
@@ -240,45 +241,45 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,
                 
                 if save_backups:
                     os.rename(f'{bs.workingdir}/data/free_bikes.tmp',f'{bs.workingdir}/data/free_bikes{date_str}.csv')
-                
+               
 
-                def pivot(bdf):
-                    bdf['coords'] = list(zip(bdf.lat,bdf.lon))
-                    pdf = pd.pivot_table(bdf, values='coords',index='time',columns='bike_id', aggfunc='first')
-                    return pdf
+                tdf = make_taken_free_bikes(bdf)
+                bs.data.taken_bikes_hourly = pd.concat([bs.data.taken_bikes_hourly,tdf], sort=True)
+                bs.data.taken_bikes_hourly = bs.data.taken_bikes_hourly.groupby(pd.Grouper(freq='H')).sum() 
 
-                pdf = pivot(bdf)
+                rdf = make_returned_free_bikes(bdf)
+                bs.data.returned_bikes_hourly = pd.concat([bs.data.returned_bikes_hourly,tdf], sort=True)
+                bs.data.returned_bikes_hourly = bs.data.returned_bikes_hourly.groupby(pd.Grouper(freq='H')).sum() 
 
+                try:
+                    bs.data.grid
+                    tdf = make_taken_free_bikes_grid(bdf,bs.data.grid)
+                    bs.data.taken_bikes_grid_hourly = pd.concat([bs.data.taken_bikes_grid_hourly,tdf], sort=True)
+                    bs.data.taken_bikes_grid_hourly = bs.data.taken_bikes_grid_hourly.groupby(pd.Grouper(freq='H')).sum() 
 
-                if bike_method == 'standard':
-                    tdf = make_taken_free_bikes(pdf)
-                    bs.data.taken_bikes_hourly = pd.concat([bs.data.taken_bikes_hourly,tdf], sort=True)
-                    bs.data.taken_bikes_hourly = bs.data.taken_bikes_hourly.groupby(pd.Grouper(freq='H')).sum() 
-                    
-                    rdf = make_returned_free_bikes(pdf)
-                    bs.data.returned_bikes_hourly = pd.concat([bs.data.returned_bikes_hourly,tdf], sort=True)
-                    bs.data.returned_bikes_hourly = bs.data.returned_bikes_hourly.groupby(pd.Grouper(freq='H')).sum() 
+                    rdf = make_returned_free_bikes_grid(bdf,bs.data.grid)
+                    bs.data.returned_bikes_grid_hourly = pd.concat([bs.data.returned_bikes_grid_hourly,tdf], sort=True)
+                    bs.data.returned_bikes_grid_hourly = bs.data.returned_bikes_grid_hourly.groupby(pd.Grouper(freq='H')).sum() 
 
-                elif bike_method == 'track':
-                    for col in pdf.columns:
-                        bs.data.free_bike_trips = pd.concat([bs.data.free_bike_trips, get_free_bike_trips(pdf[col])])
-
-                    if len(bs.data.free_bike_trips) > 0:
-                        bs.data.free_bike_trips = bs.data.free_bike_trips.drop_duplicates(subset=['bike_id','time_start'], keep='last')
-                        bs.data.free_bike_trips = bs.data.free_bike_trips.drop_duplicates(subset=['bike_id','time_end'], keep='first')
-                    
+                except AttributeError:
+                    # If no grid ignore this
+                    log("No city grid (bs.data.grid)")
+                except Exception as e:
+                    # Other error print and continue
+                    log("Error when trying to create taken_grid csv")
+                    log(e)
 
             
 
-                ## Keep the last bike queries within the last 30 minutes
-                if len(bdf) > 0:
-                    bdf = bdf[bdf.index > now() - dt.timedelta(minutes=30)]
-
+            
 
             ## Save and reset data
             bs.data.save()
             bs.data.clear()
 
+            bdf = pd.DataFrame()
+            ddf = pd.DataFrame()
+            
             
 def now():
     return pd.Timestamp(dt.datetime.utcnow()).tz_localize('UTC')

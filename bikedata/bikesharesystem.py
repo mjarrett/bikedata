@@ -1,6 +1,9 @@
 from .daemon_functions import *
 from .query_functions import *
+from .grid_functions import *
 from .bikesharesystemdata import BikeShareSystemData
+
+
 
 import sys
 
@@ -120,17 +123,16 @@ class BikeShareSystem(object):
 #             log(e)
             return pd.DataFrame()
         
-    def run(self, **kwargs):        
-        run_persistent_query(self, **kwargs)
+
         
     def monitor(self, save_backups=False,save_interval=600,
                          query_interval=60,weather=False,
-                         track_stations=True, track_bikes=True, bike_method='standard'): 
+                         track_stations=True, track_bikes=True): 
         
         run_persistent_query(self,save_backups=save_backups,
                              save_interval=save_interval,query_interval=query_interval,
                              weather=weather, track_stations=track_stations,
-                             track_bikes=track_bikes,bike_method=bike_method)
+                             track_bikes=track_bikes)
     
 
     def load_data(self,clean=False):
@@ -140,7 +142,13 @@ class BikeShareSystem(object):
             
     def now(self):
         return pd.Timestamp(dt.datetime.utcnow()).tz_localize('UTC').tz_convert(self.tz)
-    
+  
+
+    def make_city_grid(self):
+        gdf = make_city_grid(self)
+        gdf.to_file(f'{self.workingdir}/data/city_grid.shp')
+        
+   
 
     def _load_conf(self):
         sys.path = [self.workingdir] + sys.path
