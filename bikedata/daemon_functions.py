@@ -41,6 +41,7 @@ def make_taken_free_bikes(df):
     takendf[takendf>0] = 0
     takendf = takendf*-1
     takendf.name = 'trips'
+    takendf = pd.DataFrame(takendf)
     return takendf
 
 def make_returned_free_bikes(df):
@@ -51,6 +52,7 @@ def make_returned_free_bikes(df):
     returneddf = df.fillna(0.0).astype(int)
     returneddf[returneddf<0] = 0
     returneddf.name = 'trips'
+    returneddf = pd.DataFrame(returneddf)
     return returneddf
 
 
@@ -246,10 +248,15 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,
                 tdf = make_taken_free_bikes(bdf)
                 bs.data.taken_bikes_hourly = pd.concat([bs.data.taken_bikes_hourly,tdf], sort=True)
                 bs.data.taken_bikes_hourly = bs.data.taken_bikes_hourly.groupby(pd.Grouper(freq='H')).sum() 
-
+                print(bs.data.taken_bikes_hourly)
+                bs.data.taken_bikes_hourly.columns = ['trips']
+                bs.data.taken_bikes_hourly.index.name = 'time'
+                
                 rdf = make_returned_free_bikes(bdf)
                 bs.data.returned_bikes_hourly = pd.concat([bs.data.returned_bikes_hourly,tdf], sort=True)
                 bs.data.returned_bikes_hourly = bs.data.returned_bikes_hourly.groupby(pd.Grouper(freq='H')).sum() 
+                bs.data.returned_bikes_hourly.columns = ['trips']
+                bs.data.returned_bikes_hourly.index.name = 'time'
 
                 try:
                     bs.data.grid
