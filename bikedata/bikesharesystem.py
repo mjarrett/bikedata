@@ -144,8 +144,8 @@ class BikeShareSystem(object):
         return pd.Timestamp(dt.datetime.utcnow()).tz_localize('UTC').tz_convert(self.tz)
   
 
-    def make_city_grid(self):
-        gdf = make_city_grid(self)
+    def make_city_grid(self,resolution):
+        gdf = make_city_grid(self,resolution)
         gdf.to_file(f'{self.workingdir}/data/city_grid.shp')
         
    
