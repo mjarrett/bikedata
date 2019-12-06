@@ -14,9 +14,9 @@ def plot_hourly_trips(bs,kind,date1,date2,date1_hl=None,date2_hl=None,ax=None):
     if kind == 'stations':
         trips = bs.data.taken_hourly.sum(1)
     elif kind == 'bikes':
-        trips = bs.data.free_bike_trips.set_index('time_start').groupby(pd.Grouper(freq='h')).size()
+        trips = bs.data.taken_bikes_hourly.sum(1)
     elif kind == 'both':
-        trips = bs.data.taken_hourly.sum(1) + bs.data.free_bike_trips.set_index('time_start').groupby(pd.Grouper(freq='h')).size()
+        trips = bs.data.taken_hourly.sum(1).add(bs.data.taken_bikes_hourly.sum(1),fill_value=0)
     trips.index = trips.index.tz_convert(bs.tz)
     trips = trips[date1:date2]
 
@@ -45,9 +45,9 @@ def plot_daily_trips(bs,kind,date1,date2,ax=None):
     if kind == 'stations':
         trips = bs.data.taken_hourly.sum(1)
     elif kind == 'bikes':
-        trips = bs.data.free_bike_trips.set_index('time_start').groupby(pd.Grouper(freq='h')).size()
+        trips = bs.data.taken_bikes_hourly.sum(1)
     elif kind == 'both':
-        trips = bs.data.taken_hourly.sum(1) + bs.data.free_bike_trips.set_index('time_start').groupby(pd.Grouper(freq='h')).size()
+        trips = bs.data.taken_hourly.sum(1).add(bs.data.taken_bikes_hourly.sum(1),fill_value=0)
         
     trips = trips.groupby(pd.Grouper(freq='d')).sum()
     trips = trips[date1:date2]
