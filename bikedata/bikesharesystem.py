@@ -44,7 +44,7 @@ class BikeShareSystem(object):
             self.is_known = False
             
         if 'workingdir' in kwargs.keys():
-            self.workingdir = kwargs['workingdir']
+            self.workingdir = os.path.abspath(kwargs['workingdir'])
         else:
             self.workingdir = './'
             
@@ -88,7 +88,30 @@ class BikeShareSystem(object):
             self._url = get_sys_url(self)
         else: 
             self._url = None
+    
+    @property
+    def taken_hourly(self):
+        dfs = [self.data.taken_hourly, self.data.taken_bikes_grid_hourly]
+        df = pd.concat([x for x in dfs if len(x)>0],sort=True)
+        return df.sum(1)
+        
+    @property
+    def taken_hourly_stations(self):
+        df = self.data.taken_hourly
+        if len(df) > 0:
+            return df
+        else:
+            return pd.DataFrame()
+     
+    @property
+    def taken_hourly_free_bikes(self):
+        df = self.data.taken_bikes_grid_hourly
+        if len(df) > 0:
+            return df
+        else:
+            return pd.DataFrame()            
             
+    
     def query_stations(self):
         try:
             return  query_station_status(self)
