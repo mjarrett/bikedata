@@ -96,7 +96,7 @@ def make_city_grid(bs,resolution=50):
     lat_max = cdf.iloc[1].geometry.y
 
 
-    polygons = calculate_polygons(lon_min,lat_min,lon_max,lat_max,50)
+    polygons = calculate_polygons(lon_min,lat_min,lon_max,lat_max,resolution)
 
     polygons = [Polygon(x) for x in polygons]
 

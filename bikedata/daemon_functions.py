@@ -32,6 +32,7 @@ def make_returned_df(df):
 
 
 def make_taken_free_bikes(df):
+    df = df.reset_index().drop_duplicates(['bike_id','time']).set_index('time')
     # Count how many bikes are reported at each query time
     df = df['bike_id'].groupby(df.index).agg(lambda x: len(set(x.values)))
     # Count the change in reported bikes at each query time
@@ -45,6 +46,7 @@ def make_taken_free_bikes(df):
     return takendf
 
 def make_returned_free_bikes(df):
+    df = df.reset_index().drop_duplicates(['bike_id','time']).set_index('time')
     # Count how many bikes are reported at each query time
     df = df['bike_id'].groupby(df.index).agg(lambda x: len(set(x.values)))
     # Count the change in reported bikes at each query time
@@ -180,8 +182,11 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,
             if track_stations:
                 bs.data.stations = pd.concat([bs.data.stations,bs.query_station_info()],sort=True)
                 bs.data.stations = bs.data.stations.drop_duplicates(subset=['station_id'])
-                bs.data.stations['active'] = bs.data.stations.station_id.isin(bs.query_stations().station_id)
-            
+                try:
+                    bs.data.stations['active'] = bs.data.stations.station_id.isin(bs.query_stations().station_id)
+                except:
+                    log("Updating active stations failed")
+                    
             ## Update weather csv
             if weather:
                 bs.data.weather = pd.concat([bs.data.weather,bs.query_weather()])
@@ -245,36 +250,38 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,
                     os.rename(f'{bs.workingdir}/data/free_bikes.tmp',f'{bs.workingdir}/data/free_bikes{date_str}.csv')
                
 
-                tdf = make_taken_free_bikes(bdf)
+
+                try:
+                    grid = bs.data.grid
+                except AttributeError:
+                    grid = bs.make_city_grid()
+                    
+                    
+                # Update grid df
+                tdf = make_taken_free_bikes_grid(bdf,grid)
+                bs.data.taken_bikes_grid_hourly = pd.concat([bs.data.taken_bikes_grid_hourly,tdf], sort=True)
+                bs.data.taken_bikes_grid_hourly = bs.data.taken_bikes_grid_hourly.groupby(pd.Grouper(freq='H')).sum() 
+                # Update totals df
+                tdf = pd.DataFrame(tdf.sum(1))
+                tdf.columns = ['trips']
                 bs.data.taken_bikes_hourly = pd.concat([bs.data.taken_bikes_hourly,tdf], sort=True)
                 bs.data.taken_bikes_hourly = bs.data.taken_bikes_hourly.groupby(pd.Grouper(freq='H')).sum() 
-                print(bs.data.taken_bikes_hourly)
                 bs.data.taken_bikes_hourly.columns = ['trips']
-                bs.data.taken_bikes_hourly.index.name = 'time'
+                bs.data.taken_bikes_hourly.index.name = 'time'                
                 
-                rdf = make_returned_free_bikes(bdf)
+                # Update grid df
+                rdf = make_returned_free_bikes_grid(bdf,grid)
+                bs.data.returned_bikes_grid_hourly = pd.concat([bs.data.returned_bikes_grid_hourly,tdf.sum(1)], sort=True)
+                bs.data.returned_bikes_grid_hourly = bs.data.returned_bikes_grid_hourly.groupby(pd.Grouper(freq='H')).sum() 
+                # Update totals df
+                rdf = pd.DataFrame(rdf.sum(1))
+                rdf.columns = ['trips']
                 bs.data.returned_bikes_hourly = pd.concat([bs.data.returned_bikes_hourly,tdf], sort=True)
                 bs.data.returned_bikes_hourly = bs.data.returned_bikes_hourly.groupby(pd.Grouper(freq='H')).sum() 
                 bs.data.returned_bikes_hourly.columns = ['trips']
                 bs.data.returned_bikes_hourly.index.name = 'time'
-
-                try:
-                    bs.data.grid
-                    tdf = make_taken_free_bikes_grid(bdf,bs.data.grid)
-                    bs.data.taken_bikes_grid_hourly = pd.concat([bs.data.taken_bikes_grid_hourly,tdf], sort=True)
-                    bs.data.taken_bikes_grid_hourly = bs.data.taken_bikes_grid_hourly.groupby(pd.Grouper(freq='H')).sum() 
-
-                    rdf = make_returned_free_bikes_grid(bdf,bs.data.grid)
-                    bs.data.returned_bikes_grid_hourly = pd.concat([bs.data.returned_bikes_grid_hourly,tdf], sort=True)
-                    bs.data.returned_bikes_grid_hourly = bs.data.returned_bikes_grid_hourly.groupby(pd.Grouper(freq='H')).sum() 
-
-                except AttributeError:
-                    # If no grid ignore this
-                    log("No city grid (bs.data.grid)")
-                except Exception as e:
-                    # Other error print and continue
-                    log("Error when trying to create taken_grid csv")
-                    log(e)
+                
+              
 
             
 

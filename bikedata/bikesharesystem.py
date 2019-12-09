@@ -170,7 +170,7 @@ class BikeShareSystem(object):
     def make_city_grid(self,resolution):
         gdf = make_city_grid(self,resolution)
         gdf.to_file(f'{self.workingdir}/data/city_grid.shp')
-        
+        return gdf
    
 
     def _load_conf(self):
