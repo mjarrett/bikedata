@@ -135,22 +135,16 @@ class BikeShareSystem(object):
         except Exception as e:
             return dict()
         
-    def query_weather(self):
-        try:
-            return query_weather(self)
-        except Exception as e:
-#             log(e)
-            return pd.DataFrame()
         
 
         
     def monitor(self, save_backups=False,save_interval=600,
-                         query_interval=60,weather=False,
+                         query_interval=60,
                          track_stations=True, track_bikes=True): 
         
         run_persistent_query(self,save_backups=save_backups,
                              save_interval=save_interval,query_interval=query_interval,
-                             weather=weather, track_stations=track_stations,
+                             track_stations=track_stations,
                              track_bikes=track_bikes)
     
 

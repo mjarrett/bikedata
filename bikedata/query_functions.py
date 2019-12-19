@@ -116,30 +116,4 @@ def get_free_bike_url(sys_url):
         data = json.loads(url.read().decode())
     return [x for x in data['data']['en']['feeds'] if x['name']=='free_bike_status'][0]['url']
 
-@timeout_decorator.timeout(30)
-def query_weather(bs):
-    
-    """https://www.weatherbit.io/api/weather-current"""
-    weather_url = f'https://api.weatherbit.io/v2.0/current/?lat={bs.lat_min}&lon={bs.lon_min}&units=M&key={bs.WEATHERBIT_KEY}'
 
-
-    with urllib.request.urlopen(weather_url) as url:
-        data = json.loads(url.read().decode())
-
-    wdf = pd.DataFrame(data['data'][0])
-    wdf.index = pd.to_datetime(wdf['ob_time'])
-    wdf.index = wdf.index.tz_localize('UTC')#.tz_convert(tz)
-
-    cols = ['rh', 'pres',
-           'clouds', 'wind_spd',
-           'vis', 'uv',
-           'snow', 'wind_dir', 'elev_angle',
-           'precip', 'sunrise', 'sunset', 'temp',
-           'station', 'app_temp','ob_time','timezone'
-           ]
-    wdf = wdf[cols]
-
-    wdf.index.name = 'time'
-
-        
-    return wdf

@@ -20,7 +20,6 @@ class BikeShareSystemData(object):
         self.returned_hourly = load_returned_hourly_csv(self)
         self.taken_bikes = load_taken_bikes_csv(self)
         self.returned_bikes = load_returned_bikes_csv(self)
-        self.weather = load_weather_csv(self)
         self.grid  = load_grid(self)
     
     def clean(self,tz='UTC'):
@@ -31,7 +30,6 @@ class BikeShareSystemData(object):
         self.returned_hourly = cleaner(self.returned_hourly,self.stationxw,tz)
         self.taken_bikes = cleaner(self.taken_bikes,self.stationxw,tz)
         self.returned_bike = cleaner(self.returned_bikes,self.stationxw,tz)
-        self.weather = cleaner(self.weather,self.stationxw,tz)
         self._clean = True
         
     def save(self,force=False):
@@ -55,8 +53,7 @@ class BikeShareSystemData(object):
             self.taken_bikes.reset_index().to_csv(f'{self.workingdir}/data/taken_bikes.csv', index=False)
         if len(self.returned_bikes) > 0:
             self.returned_bikes.reset_index().to_csv(f'{self.workingdir}/data/returned_bikes.csv', index=False)
-        if len(self.weather) > 0:
-            self.weather.reset_index().to_csv(f'{self.workingdir}/data/weather.csv',index=False)
+
         
  
     def clear(self):
@@ -65,7 +62,6 @@ class BikeShareSystemData(object):
         self.returned_hourly = pd.DataFrame()
         self.taken_bikes = pd.DataFrame()
         self.returned_bikes = pd.DataFrame()
-        self.weather = pd.DataFrame()
 
 def load_stations_csv(bsd):
     try:
@@ -116,12 +112,6 @@ def load_grid(bsd):
     except:
         return None
 
-def load_weather_csv(bsd):
-    try:
-        weatherdf = pd.read_csv(f'{bsd.workingdir}/data/weather.csv',index_col=0,parse_dates=['time'])
-    except:
-        weatherdf = pd.DataFrame()
-    return weatherdf
 
 
 def cleaner(df,xw,tz):
