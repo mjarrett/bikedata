@@ -89,11 +89,7 @@ class BikeShareSystem(object):
         else: 
             self._url = None
     
-    @property
-    def taken_hourly(self):
-        dfs = [self.data.taken_hourly, self.data.taken_bikes_grid_hourly]
-        df = pd.concat([x for x in dfs if len(x)>0],sort=True)
-        return df.sum(1)
+
         
     @property
     def taken_hourly_stations(self):
@@ -105,7 +101,7 @@ class BikeShareSystem(object):
      
     @property
     def taken_hourly_free_bikes(self):
-        df = self.data.taken_bikes_grid_hourly
+        df = self.data.taken_bikes['trips'].groupby(pd.Grouper(freq='h')).sum()
         if len(df) > 0:
             return df
         else:
