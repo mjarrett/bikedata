@@ -12,11 +12,11 @@ def plot_hourly_trips(bs,kind,date1,date2,date1_hl=None,date2_hl=None,ax=None):
 
     
     if kind == 'stations':
-        trips = bs.data.taken_hourly.sum(1)
+        trips = bs.taken_hourly_stations.sum(1)
     elif kind == 'bikes':
-        trips = bs.data.taken_bikes_hourly.sum(1)
+        trips = bs.taken_hourly_free_bikes
     elif kind == 'both':
-        trips = bs.data.taken_hourly.sum(1).add(bs.data.taken_bikes_hourly.sum(1),fill_value=0)
+        trips = bs.taken_hourly_free_bikes.add(bs.taken_hourly_stations.sum(1),fill_value=0)
     trips.index = trips.index.tz_convert(bs.tz)
     trips = trips[date1:date2]
 
@@ -43,11 +43,11 @@ def plot_daily_trips(bs,kind,date1,date2,ax=None):
         f,ax = plt.subplots()
 
     if kind == 'stations':
-        trips = bs.data.taken_hourly.sum(1)
+        trips = bs.taken_hourly_stations.sum(1)
     elif kind == 'bikes':
-        trips = bs.data.taken_bikes_hourly.sum(1)
+        trips = bs.taken_hourly_free_bikes
     elif kind == 'both':
-        trips = bs.data.taken_hourly.sum(1).add(bs.data.taken_bikes_hourly.sum(1),fill_value=0)
+        trips = bs.taken_hourly_free_bikes.add(bs.taken_hourly_stations.sum(1),fill_value=0)
         
     trips = trips.groupby(pd.Grouper(freq='d')).sum()
     trips = trips[date1:date2]

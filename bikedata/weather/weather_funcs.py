@@ -3,8 +3,10 @@ import json
 import urllib
 import datetime as dt
 
-def query_weather_day(bs,freq,day_timestamp):
-    weather_url = f'https://api.darksky.net/forecast/{bs.DARKSKY_KEY}/{bs.lat},{bs.lon},{day_timestamp}?units=si'
+def query_weather_day(bs,freq,time):
+    timestr = time.strftime('%Y-%m-%dT01:00:00')
+    
+    weather_url = f'https://api.darksky.net/forecast/{bs.DARKSKY_KEY}/{bs.lat},{bs.lon},{timestr}?units=si'
     with urllib.request.urlopen(weather_url) as url:    
         data = json.loads(url.read().decode())
         
@@ -37,14 +39,12 @@ def get_weather_range(bs,freq,day1,day2=None):
     Returns a pandas.DataFrame
     
     """
-    day1 = int(day1.value/10**9)
-    if day2 is not None:
-        day2 = int(day2.value/10**9)
+
     
     if day2 is None:
         df = query_weather_day(bs,freq,day1)
     else:
-        days = [x for x in range(day1,day2+60*60*24,60*60*24)]
+        days = list(pd.date_range(day1,day2,freq='d'))
         df = pd.concat([query_weather_day(bs,freq,x) for x in days])
     
 

@@ -8,7 +8,14 @@ import cartopy.crs as ccrs
 
 
 
-def plot_stations(bs,date1,date2=None):
+def plot_stations(bs,date1,date2=None,extent=None):
+    
+    """
+    Plot stations on a map. Station size proportional to usage in date range
+    bs: bikedata.BikeShareSystem instance
+    date1,date2: date range (date string)
+    extent: [lon_min,lon_max,lat_min,lat_max] in lat/lon
+    """
     if date2 is None:
         date2 = date1
     
@@ -19,7 +26,8 @@ def plot_stations(bs,date1,date2=None):
 
     tile = MapboxStyleTiles(bs.MAPBOX_TOKEN,'mjarrett','ck3gggjkl03gp1cpfm927yo7c')
 
-    extent = [bs.lon_min,bs.lon_max,bs.lat_min,bs.lat_max]
+    if extent is None:
+        extent = [bs.lon_min,bs.lon_max,bs.lat_min,bs.lat_max]
     ax.set_extent(extent)
     ax.add_image(tile,15,interpolation='spline36')
     
@@ -51,3 +59,31 @@ def plot_stations(bs,date1,date2=None):
     ax.legend([l3,l1,l2],labels,title=f'Station Activity')
     
     return f,ax
+
+
+
+def plot_free_bike_map(bs,date1,date2=None):
+    color=sns.color_palette()[0]
+    color2=sns.color_palette()[1]
+    
+    f,ax = plt.subplots(subplot_kw={'projection': ccrs.epsg(3857)},figsize=(7,7))
+
+    tile = MapboxStyleTiles(bs.MAPBOX_TOKEN,'mjarrett','ck3gggjkl03gp1cpfm927yo7c')
+
+    extent = [bs.lon_min,bs.lon_max,bs.lat_min,bs.lat_max]
+    ax.set_extent(extent)
+    ax.add_image(tile,15,interpolation='spline36')
+    
+    ax.outline_patch.set_visible(False)
+    ax.background_patch.set_visible(False)
+    bs.data.grid.FID = bs.data.grid.FID.astype(str)
+
+    trips = bs.data.taken_bikes_grid_hourly[date1:date2]
+    trips = trips.sum().reset_index()
+    trips.columns = ['FID','trips']
+
+    trips = bs.data.grid.merge(trips,on='FID')
+
+    trips.plot(column='trips',ax=ax,alpha=0.5)
+    return f,ax
+    

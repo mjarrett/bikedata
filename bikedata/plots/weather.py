@@ -4,8 +4,10 @@ import bikedata.weather as bdw
 
 
 def plot_daily_weather(bs,date1,date2,ax=None):
-    df = bdw.get_weather_range(bs,'daily',date1,date2)
-    
+    try:
+        df = bdw.get_weather_range(bs,'daily',date1,date2)
+    except:
+        return None
     
     if ax is None:
         f,ax = plt.subplots()
@@ -27,14 +29,18 @@ def plot_daily_weather(bs,date1,date2,ax=None):
     ax.tick_params(axis='x',labelrotation=45)
     ax2.tick_params(axis='x',labelrotation=45)
     
-    ax.text(0,-1.4,'Powered by Dark Sky: https://darksky.net/poweredby/',transform=ax.transAxes,fontdict={'color':'grey','style':'italic','family':'serif','size':8})
+    #ax.text(0,-1.4,'Powered by Dark Sky: https://darksky.net/poweredby/',transform=ax.transAxes,fontdict={'color':'grey','style':'italic','family':'serif','size':8})
     
     
     return ax,ax2
 
 
 def plot_hourly_weather(bs,date1,date2,ax=None):
-    df = bdw.get_weather_range(bs,'hourly',date1,date2)
+    try:
+        df = bdw.get_weather_range(bs,'hourly',date1,date2)
+    except:
+        return None
+    
     if ax is None:
         f,ax = plt.subplots()
         
@@ -55,7 +61,7 @@ def plot_hourly_weather(bs,date1,date2,ax=None):
     ax.tick_params(axis='x',labelrotation=45)
     ax2.tick_params(axis='x',labelrotation=45)
     
-    ax.text(0,-2.6,'Powered by Dark Sky: https://darksky.net/poweredby/',transform=ax.transAxes,fontdict={'color':'grey','style':'italic','family':'serif','size':8})
+    #ax.text(0,-2.6,'Powered by Dark Sky: https://darksky.net/poweredby/',transform=ax.transAxes,fontdict={'color':'grey','style':'italic','family':'serif','size':8})
     
     
     return ax,ax2

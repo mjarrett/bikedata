@@ -2,7 +2,7 @@ from .plot_settings import *
 
 from .heatmap import plot_heatmap
 
-from .stations import plot_stations
+from .stations import plot_stations, plot_free_bike_map
 
 from .trips import plot_hourly_trips, plot_daily_trips, plot_alltime_trips
 
