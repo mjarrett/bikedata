@@ -101,42 +101,26 @@ class BikeShareSystem(object):
      
     @property
     def taken_hourly_free_bikes(self):
-        df = self.data.taken_bikes['trips'].groupby(pd.Grouper(freq='h')).sum()
-        if len(df) > 0:
+        try:
+            df = self.data.taken_bikes['trips'].groupby(pd.Grouper(freq='h')).sum()
             return df
-        else:
+        except:
             return pd.DataFrame()            
             
     
     def query_stations(self):
-        try:
-            return  query_station_status(self)
-        except Exception as e:
-#             log(e)
-            return pd.DataFrame()
+        return  query_station_status(self)
         
     def query_bikes(self):
-        try:
-            return  query_free_bikes(self)
-        except Exception as e:
-#             log(e)
-            return pd.DataFrame()
+        return  query_free_bikes(self)
+
         
     def query_station_info(self):
-        try:
-            return query_station_info(self)
-        except Exception as e:
-#             log(e)
-            return pd.DataFrame()
+        return query_station_info(self)
         
     def query_system_info(self):
-        try:
-            return query_system_info(self)
-        except Exception as e:
-            return dict()
-        
-        
-
+        return query_system_info(self)
+       
         
     def monitor(self, save_backups=False,save_interval=600,
                          query_interval=60,

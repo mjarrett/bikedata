@@ -125,28 +125,32 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,
 #        log("Query API")
 
         if track_stations:
-            station_query = bs.query_stations()
-            ddf = pd.concat([ddf,station_query], sort=True)
-            if len(ddf) > 0:
-                ddf.reset_index().to_csv(f'{bs.workingdir}/data/station_data.tmp', index=False)
-
+            try:
+                station_query = bs.query_stations()
+                ddf = pd.concat([ddf,station_query], sort=True)
+                if len(ddf) > 0:
+                    ddf.reset_index().to_csv(f'{bs.workingdir}/data/station_data.tmp', index=False)
+            except:
+                log("Updating station activity failed")
 
         if track_bikes:
 
-            bq = bs.query_bikes()
-            bq = bq.round(4)
-            bq['coords'] = list(zip(bq.lat,bq.lon))
-            if bq.index[0] in bdf.index:
-                pass
-            else:
-                bdf = pd.concat([bdf,pd.pivot_table(bq,values='lat',index='time',columns='coords', aggfunc='count').fillna(0)],sort=True)
-                #not sure why this is necessary but tuple column labels are getting converted to multiindex
-                bdf.columns = bdf.columns.to_flat_index() 
-                bdf = bdf.fillna(0)
+            try:
+                bq = bs.query_bikes()
+                bq = bq.round(4)
+                bq['coords'] = list(zip(bq.lat,bq.lon))
+                if bq.index[0] in bdf.index:
+                    pass
+                else:
+                    bdf = pd.concat([bdf,pd.pivot_table(bq,values='lat',index='time',columns='coords', aggfunc='count').fillna(0)],sort=True)
+                    #not sure why this is necessary but tuple column labels are getting converted to multiindex
+                    bdf.columns = bdf.columns.to_flat_index() 
+                    bdf = bdf.fillna(0)
 
-            if len(bdf) > 0:
-                bdf.reset_index().to_csv(f'{bs.workingdir}/data/free_bikes.tmp', index=False)
-
+                if len(bdf) > 0:
+                    bdf.reset_index().to_csv(f'{bs.workingdir}/data/free_bikes.tmp', index=False)
+            except:
+                log("Updating free bikes failed")
                 
         
         ## Periodically update CSV files 
@@ -166,13 +170,13 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,
             
             ## Update stations csv
             if track_stations:
-                bs.data.stations = pd.concat([bs.data.stations,bs.query_station_info()],sort=True)
-                bs.data.stations = bs.data.stations.drop_duplicates(subset=['station_id'])
                 try:
+                    
+                    bs.data.stations = pd.concat([bs.data.stations,bs.query_station_info()],sort=True)
+                    bs.data.stations = bs.data.stations.drop_duplicates(subset=['station_id'])
                     bs.data.stations['active'] = bs.data.stations.station_id.isin(bs.query_stations().station_id)
                 except:
                     log("Updating active stations failed")
-                    
 
             
             ## Update taken dataframe
