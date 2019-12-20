@@ -91,7 +91,7 @@ def make_returned_df(df):
 #     return returneddf
 
 def run_persistent_query(bs, save_backups=False,save_interval=600,
-                         query_interval=60,weather=True,
+                         query_interval=60,
                          track_stations=True, track_bikes=True):
 
     try:
@@ -173,29 +173,7 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,
                 except:
                     log("Updating active stations failed")
                     
-            ## Update weather csv
-            if weather:
-                bs.data.weather = pd.concat([bs.data.weather,bs.query_weather()])
 
-                if len(bs.data.weather) > 0:
-                    bs.data.weather = bs.data.weather.groupby(pd.Grouper(freq='h')).agg({'rh':'mean',
-                                           'pres':'mean',
-                                           'clouds':'mean',
-                                           'wind_spd':'mean',
-                                           'vis':'mean',
-                                           'uv':'mean',
-                                           'snow':'mean',
-                                           'wind_dir':'first', 
-                                           'elev_angle':'mean',
-                                           'precip':'mean', 
-                                           'sunrise':'first', 
-                                           'sunset':'first', 
-                                           'temp':'mean',
-                                           'station':'first', 
-                                           'app_temp':'mean',
-                                           'ob_time':'first',
-                                           'timezone':'first'
-                                          })
             
             ## Update taken dataframe
             
