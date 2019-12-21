@@ -4,6 +4,7 @@ import timeout_decorator
 import geopandas 
 import sys
 import os
+import time
 
 def log(*args):
     args = [dt.datetime.now()] + list(args)
@@ -116,6 +117,7 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,
     savetime = now() + dt.timedelta(seconds=save_interval)
     
     while True:
+        time.sleep(10)
         
         if now() < querytime:
             continue
@@ -153,6 +155,8 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,
                 log("Updating free bikes failed")
                 
         
+                
+        
         ## Periodically update CSV files 
         if now() < savetime:
             continue
@@ -184,8 +188,10 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,
             if track_stations and len(ddf) > 0:
                 
                 if save_backups:
-                    os.rename(f'{bs.workingdir}/data/station_data.tmp',f'{bs.workingdir}/data/station_data{date_str}.csv')
-                
+                    try:
+                        os.rename(f'{bs.workingdir}/data/station_data.tmp',f'{bs.workingdir}/data/station_data{date_str}.csv')
+                    except:
+                        pass
                 
 
                     
@@ -215,8 +221,10 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,
             if track_bikes and len(bdf) > 0:
                 
                 if save_backups:
-                    os.rename(f'{bs.workingdir}/data/free_bikes.tmp',f'{bs.workingdir}/data/free_bikes{date_str}.csv')
-               
+                    try:
+                        os.rename(f'{bs.workingdir}/data/free_bikes.tmp',f'{bs.workingdir}/data/free_bikes{date_str}.csv')
+                    except:
+                        pass
                 
                 ddf = (bdf - bdf.shift(1)).fillna(0)
                 
