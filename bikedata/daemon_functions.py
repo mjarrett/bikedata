@@ -144,16 +144,18 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,
                 if bq.index[0] in bdf.index:
                     pass
                 else:
-                    bdf = pd.concat([bdf,pd.pivot_table(bq,values='lat',index='time',columns='coords', aggfunc='count').fillna(0)],sort=True)
+                    pdf = pd.pivot_table(bq,values='lat',index='time',columns='coords', aggfunc='count').fillna(0)
                     #not sure why this is necessary but tuple column labels are getting converted to multiindex
-                    bdf.columns = bdf.columns.to_flat_index() 
+                    pdf.columns = pdf.columns.to_flat_index() 
+                    pdf.columns = [str(x) for x in pdf.columns] # make the tuples in the header strings for easier handling
+                    bdf = pd.concat([bdf,pdf],sort=True)
                     bdf = bdf.fillna(0)
 
                 if len(bdf) > 0:
                     bdf.reset_index().to_csv(f'{bs.workingdir}/data/free_bikes.tmp', index=False)
-            except:
+            except Exception as e:
                 log("Updating free bikes failed")
-                
+                log(e)
         
                 
         
@@ -234,6 +236,10 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,
                 tdf = tdf.stack()
                 tdf = tdf.reset_index()
                 tdf.columns = ['time','coords','trips']
+                tdf.coords = tdf.coords.map(lambda y: tuple([float(x) for x in y.strip("'()").split(',')]))
+                tdf['lat'] = tdf.coords.map(lambda x: x[0])
+                tdf['lon'] = tdf.coords.map(lambda x: x[1])
+                del tdf['coords']
                 tdf = tdf.set_index('time')
                 tdf = tdf[tdf.trips > 0]
                 bs.data.taken_bikes = pd.concat([bs.data.taken_bikes,tdf], sort=True)
@@ -243,6 +249,10 @@ def run_persistent_query(bs, save_backups=False,save_interval=600,
                 rdf = rdf.stack()
                 rdf = rdf.reset_index()
                 rdf.columns = ['time','coords','trips']
+                rdf.coords = rdf.coords.map(lambda y: tuple([float(x) for x in y.strip("'()").split(',')]))
+                rdf['lat'] = rdf.coords.map(lambda x: x[0])
+                rdf['lon'] = rdf.coords.map(lambda x: x[1])
+                del rdf['coords']
                 rdf = rdf.set_index('time')
                 rdf = rdf[rdf.trips > 0]
                 bs.data.returned_bikes = pd.concat([bs.data.returned_bikes,rdf],sort=True)
