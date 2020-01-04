@@ -186,7 +186,16 @@ class BikeShareSystem(object):
         except:
             self.tz = 'UTC'
             
+        try:
+            self.palette = conf.palette
+        except:
+            self.palette = None
             
+        if self._url is None:
+            try:
+                self._url = conf.url
+            except:
+                pass
 
         
     def _set_canon_latlon(self):
