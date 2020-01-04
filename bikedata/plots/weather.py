@@ -15,7 +15,7 @@ def plot_daily_weather(bs,date1,date2,ax=None):
     ax2 = ax.twinx()
 
     ax.set_ylabel('High ($^\circ$C)')
-    ax2.bar(df.index,df['precipIntensity'].values,color='#3778bf')
+    ax2.bar(df.index,df['precipIntensity'].values*24,color='#3778bf')
 #     ax2.bar(df.index,df['precipIntensity'].values,color='#3778bf',zorder=1001,width=1/24)
 
     ax.plot(df.index,df['temperatureHigh'],color='#feb308',zorder=1000)

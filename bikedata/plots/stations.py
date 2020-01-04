@@ -19,6 +19,9 @@ def plot_stations(bs,date1,date2=None,extent=None):
     if date2 is None:
         date2 = date1
     
+    
+    sns.set(style='ticks', palette=bs.palette)  
+    color = sns.color_palette()[0]
     color=sns.color_palette()[0]
     color2=sns.color_palette()[1]
     
