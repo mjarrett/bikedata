@@ -32,15 +32,15 @@ class BikeShareSystem(object):
         if 'system' in kwargs.keys():
             self._system = kwargs['system']
             self.is_known = is_known(self)
-            self._url = None
+            self.url = None
                 
         elif 'url' in kwargs.keys():
             self._system = None
-            self._url = kwargs['url']
+            self.url = kwargs['url']
             self.is_known = False
         else:
             self._system = None
-            self._url = None
+            self.url = None
             self.is_known = False
             
         if 'workingdir' in kwargs.keys():
@@ -48,9 +48,18 @@ class BikeShareSystem(object):
         else:
             self.workingdir = './'
             
-            
+        
+        
         
         self._load_conf()
+        
+        if self.url is None:
+            try:
+                self.url = get_sys_url(self)
+            except:
+                pass
+            
+        
         
         self._set_canon_latlon()
             
@@ -62,20 +71,7 @@ class BikeShareSystem(object):
         else:
             return f"BikeShareSystem()"
     
-    @property
-    def url(self):
-        if self.is_known:
-            return get_sys_url(self)
-        else:
-            return self._url
-    
-    @url.setter
-    def url(self,value):
-        if not self.is_known:
-            self._url = value
-        else:
-            self._url = self._url
-            
+
     @property
     def system(self):
         return self._system
@@ -191,9 +187,9 @@ class BikeShareSystem(object):
         except:
             self.palette = None
             
-        if self._url is None:
+        if self.url is None:
             try:
-                self._url = conf.url
+                self.url = conf.url
             except:
                 pass
 
