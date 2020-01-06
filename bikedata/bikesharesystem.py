@@ -31,17 +31,17 @@ class BikeShareSystem(object):
         
         if 'system' in kwargs.keys():
             self._system = kwargs['system']
-            self.is_known = is_known(self)
-            self.url = None
+            try:
+                self.url = get_sys_url(self)
+            except:
+                self.url = None
                 
         elif 'url' in kwargs.keys():
             self._system = None
             self.url = kwargs['url']
-            self.is_known = False
         else:
             self._system = None
             self.url = None
-            self.is_known = False
             
         if 'workingdir' in kwargs.keys():
             self.workingdir = os.path.abspath(kwargs['workingdir'])
@@ -79,11 +79,10 @@ class BikeShareSystem(object):
     @system.setter
     def system(self,value):
         self._system = value
-        self.is_known = is_known(self)
-        if self.is_known:
-            self._url = get_sys_url(self)
-        else: 
-            self._url = None
+        try:
+            self.url = get_sys_url(self)
+        except: 
+            self.url = None
     
 
         
