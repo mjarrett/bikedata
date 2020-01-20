@@ -74,6 +74,9 @@ class BikeShareSystem(object):
 
     @property
     def system(self):
+        """
+        System ID in https://github.com/NABSA/gbfs/blob/master/systems.csv
+        """
         return self._system
     
     @system.setter
@@ -88,6 +91,11 @@ class BikeShareSystem(object):
         
     @property
     def taken_hourly_stations(self):
+        """
+        Retrieve hourly trip data from system stations
+        """
+        
+        
         df = self.data.taken_hourly
         if len(df) > 0:
             return df
@@ -96,6 +104,9 @@ class BikeShareSystem(object):
      
     @property
     def taken_hourly_free_bikes(self):
+        """
+        Retrieve free bike trip data
+        """
         try:
             df = self.data.taken_bikes['trips'].groupby(pd.Grouper(freq='h')).sum()
             return df
@@ -104,22 +115,49 @@ class BikeShareSystem(object):
             
     
     def query_stations(self):
+        """
+        Query station_status.json
+        """
         return  query_station_status(self)
         
     def query_bikes(self):
+        """
+        Query free_bikes.json
+        """
         return  query_free_bikes(self)
 
         
     def query_station_info(self):
+        """
+        Query station_information.json
+        """
         return query_station_info(self)
         
     def query_system_info(self):
+        """
+        Query system_information.json
+        """
         return query_system_info(self)
        
         
     def monitor(self, save_backups=False,save_interval=600,
                          query_interval=60,
                          track_stations=True, track_bikes=True): 
+        
+        """
+        This method will run until killed, periodically querying the GBFS feed, computing trip counts and saving data files. Us\
+e with your daemon application of choice.
+
+        bs = bd.BikeShareSystem('mobi_bikes)
+        
+        bs.monitor(save_backups=False, # save intermediary files
+                    save_interval=600, # seconds
+                    query_interval=60, # seconds
+                    track_stations=True, # track stations
+                    track_bikes=True     # track free bikes
+
+        """
+        
         
         run_persistent_query(self,save_backups=save_backups,
                              save_interval=save_interval,query_interval=query_interval,
@@ -128,6 +166,10 @@ class BikeShareSystem(object):
     
 
     def load_data(self,clean=False):
+        
+        """
+        Load saved data files created by BikeShareSystem.monitor() into Pandas dataframe
+        """
         self.data = BikeShareSystemData(workingdir=self.workingdir)
         if clean:
             self.data.clean(self.tz)

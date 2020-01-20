@@ -4,13 +4,9 @@ import urllib
 import datetime as dt
 import timeout_decorator
 
-def is_known(bs):
-    df = pd.read_csv(bs.gbfs_master_csv)
-    if bs.system in df['System ID'].values:
-        return True
-    else:
-        return False
+
         
+
 
 def get_sys_url(bs):
     """
@@ -63,6 +59,9 @@ def query_system_info(bs):
     
 @timeout_decorator.timeout(30) 
 def query_station_status(bs):
+    """
+    Query station_status.json
+    """
     
     url = get_station_status_url(bs.url)
 
@@ -86,6 +85,10 @@ def query_station_status(bs):
 
 @timeout_decorator.timeout(30) 
 def query_station_info(bs):
+    
+    """
+    Query station_information.json
+    """
     url = get_station_info_url(bs.url)
 
     with urllib.request.urlopen(url) as data_url:
@@ -96,6 +99,11 @@ def query_station_info(bs):
 
 @timeout_decorator.timeout(30) 
 def query_free_bikes(bs):
+    
+    """
+    Query free_bikes.json
+    """
+    
     url = get_free_bike_url(bs.url)
 
     with urllib.request.urlopen(url) as data_url:
