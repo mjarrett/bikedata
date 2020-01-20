@@ -2,6 +2,8 @@
 
 A package for processing real-time [GBFS bikeshare feeds](https://github.com/NABSA/gbfs). This package is experimental and subject to change at any time.
 
+See [this blog post](https://notes.mikejarrett.ca/tracking-bikeshare-use-using-gbfs-feeds/) for an explanation of the internal workings of the package.
+
 
 ## Installation
 
