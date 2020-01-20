@@ -1,6 +1,6 @@
 # Bikedata
 
-A package for processing real-time [GBFS bikeshare feeds](https://github.com/NABSA/gbfs).
+A package for processing real-time [GBFS bikeshare feeds](https://github.com/NABSA/gbfs). This package is experimental and subject to change at any time.
 
 
 ## Installation
@@ -58,7 +58,7 @@ bs.monitor(save_backups=False, # save intermediary files
 	track_bikes=True     # track free bikes
 ```
 Data files are saved in the `./data/` sub directory. To retrieve saved data run: `bs.load_data()`. The data will be held in Pandas dataframes as children of `bs.data`.
-```
+
 Use `bs.load_data(clean=True)` to convert times to system timezone (from UTC) and convert station ids to station names.
 
 
@@ -66,7 +66,6 @@ Use `bs.load_data(clean=True)` to convert times to system timezone (from UTC) an
 ## Plotting
 Some plotting functions are provided in the bikedata.plots submodule. Matplotlib and cartopy are required.
 ```
-
 import bikedata as bd
 import bikedata.plots as bdp
 
