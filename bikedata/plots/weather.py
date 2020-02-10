@@ -3,6 +3,14 @@ import matplotlib.dates as mdates
 import bikedata.weather as bdw
 
 
+c_blue =     '#3286AD' #// primary
+c_light_blue='#50AAD3'
+c_indigo =   '#8357B2' #// info
+c_red =      '#FF5B71' # // danger
+c_yellow =   '#E5DE50' #// warning
+c_green =    '#77ACA2' #// success
+
+
 def plot_daily_weather(bs,date1,date2,ax=None):
     try:
         df = bdw.get_weather_range(bs,'daily',date1,date2)
@@ -15,13 +23,13 @@ def plot_daily_weather(bs,date1,date2,ax=None):
     ax2 = ax.twinx()
 
     ax.set_ylabel('High ($^\circ$C)')
-    ax2.bar(df.index,df['precipIntensity'].values*24,color='#3778bf')
+    ax2.bar(df.index,df['precipIntensity'].values*24,color=c_light_blue)
 #     ax2.bar(df.index,df['precipIntensity'].values,color='#3778bf',zorder=1001,width=1/24)
 
-    ax.plot(df.index,df['temperatureHigh'],color='#feb308',zorder=1000)
+    ax.plot(df.index,df['temperatureHigh'],color=c_yellow,zorder=1000)
     ax2.set_ylabel('Precip (mm)')
-    ax.yaxis.label.set_color('#feb308')
-    ax2.yaxis.label.set_color('#3778bf')
+    ax.yaxis.label.set_color(c_yellow)
+    ax2.yaxis.label.set_color(c_light_blue)
     ax.spines['top'].set_visible(False)
     ax2.spines['top'].set_visible(False)
     ax.xaxis.set_major_locator(mdates.WeekdayLocator())
@@ -48,12 +56,12 @@ def plot_hourly_weather(bs,date1,date2,ax=None):
 
     ax.set_ylabel('Temp ($^\circ$C)')
 #     ax2.bar(df.index,df['precipIntensity'].values,color='#3778bf',zorder=1001,width=1/24)
-    ax2.plot(df.index,df['precipIntensity'].values,color='#3778bf',zorder=1001)
-    ax2.fill_between(df.index,0,df['precipIntensity'].values,alpha=0.8,color='#3778bf')
-    ax.plot(df.index,df['temperature'],color='#feb308',zorder=1000)
+    ax2.plot(df.index,df['precipIntensity'].values,color=c_light_blue,zorder=1001)
+    ax2.fill_between(df.index,0,df['precipIntensity'].values,alpha=0.8,color=c_light_blue)
+    ax.plot(df.index,df['temperature'],color=c_yellow,zorder=1000)
     ax2.set_ylabel('Precip (mm)')
-    ax.yaxis.label.set_color('#feb308')
-    ax2.yaxis.label.set_color('#3778bf')
+    ax.yaxis.label.set_color(c_yellow)
+    ax2.yaxis.label.set_color(c_light_blue)
     ax.spines['top'].set_visible(False)
     ax2.spines['top'].set_visible(False)
     ax.xaxis.set_major_locator(mdates.DayLocator(tz=df.index.tz))

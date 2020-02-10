@@ -14,9 +14,9 @@ def plot_hourly_trips(bs,kind,date1,date2,date1_hl=None,date2_hl=None,ax=None):
     
     if kind == 'stations':
         trips = bs.taken_hourly_stations.sum(1)
-    elif kind == 'bikes':
+    elif kind == 'floating':
         trips = bs.taken_hourly_free_bikes
-    elif kind == 'both':
+    elif kind == 'hybrid':
         trips = bs.taken_hourly_free_bikes.add(bs.taken_hourly_stations.sum(1),fill_value=0)
     trips.index = trips.index.tz_convert(bs.tz)
     trips = trips[date1:date2]
@@ -52,9 +52,9 @@ def plot_daily_trips(bs,kind,date1,date2,ax=None):
 
     if kind == 'stations':
         trips = bs.taken_hourly_stations.sum(1)
-    elif kind == 'bikes':
+    elif kind == 'floating':
         trips = bs.taken_hourly_free_bikes
-    elif kind == 'both':
+    elif kind == 'hybrid':
         trips = bs.taken_hourly_free_bikes.add(bs.taken_hourly_stations.sum(1),fill_value=0)
         
     trips = trips.groupby(pd.Grouper(freq='d')).sum()
@@ -86,9 +86,9 @@ def plot_alltime_trips(bs,kind,ax=None):
 
     if kind == 'stations':
         trips = bs.data.taken_hourly.sum(1)
-    elif kind == 'bikes':
+    elif kind == 'floating':
         trips = bs.data.free_bike_trips.set_index('time_start').groupby(pd.Grouper(freq='h')).size()
-    elif kind == 'both':
+    elif kind == 'hybrid':
         trips = bs.taken_hourly_free_bikes.add(bs.taken_hourly_stations.sum(1),fill_value=0)
 
     trips.index = trips.index.tz_convert(bs.tz)    
