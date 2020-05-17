@@ -37,7 +37,7 @@ def plot_stations(bs,date1,date2=None,extent=None):
     ax.outline_patch.set_visible(False)
     ax.background_patch.set_visible(False)
     
-    sdf = bs.data.stations
+    sdf = bs.data.stations[bs.data.stations['active']]
     sdf['geometry'] = [Point(xy) for xy in zip(sdf.lon, sdf.lat)]
 
     thdf = bs.data.taken_hourly

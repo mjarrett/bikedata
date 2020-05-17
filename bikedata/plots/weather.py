@@ -1,6 +1,9 @@
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+import matplotlib.ticker as ticker
 import bikedata.weather as bdw
+import seaborn as sns
+import numpy as np
 
 
 c_blue =     '#3286AD' #// primary
@@ -22,12 +25,12 @@ def plot_daily_weather(bs,date1,date2,ax=None):
         
     ax2 = ax.twinx()
 
-    ax.set_ylabel('High ($^\circ$C)')
+    ax.set_ylabel('Daily high')
     ax2.bar(df.index,df['precipIntensity'].values*24,color=c_light_blue)
 #     ax2.bar(df.index,df['precipIntensity'].values,color='#3778bf',zorder=1001,width=1/24)
 
     ax.plot(df.index,df['temperatureHigh'],color=c_yellow,zorder=1000)
-    ax2.set_ylabel('Precip (mm)')
+    ax2.set_ylabel('Precipitation')
     ax.yaxis.label.set_color(c_yellow)
     ax2.yaxis.label.set_color(c_light_blue)
     ax.spines['top'].set_visible(False)
@@ -37,6 +40,16 @@ def plot_daily_weather(bs,date1,date2,ax=None):
     ax.tick_params(axis='x',labelrotation=45)
     ax2.tick_params(axis='x',labelrotation=45)
     
+    sns.despine(ax=ax,top=True,bottom=True,left=True,right=True)
+    sns.despine(ax=ax2,top=True,bottom=True,left=True,right=True)
+    ax.tick_params(axis='both', which='both',length=0)
+    ax2.tick_params(axis='both', which='both',length=0)
+    ax.grid(which='both')   
+    
+    ax.set_yticklabels([])
+    ax2.set_yticklabels([])
+    
+
     #ax.text(0,-1.4,'Powered by Dark Sky: https://darksky.net/poweredby/',transform=ax.transAxes,fontdict={'color':'grey','style':'italic','family':'serif','size':8})
     
     
@@ -54,12 +67,12 @@ def plot_hourly_weather(bs,date1,date2,ax=None):
         
     ax2 = ax.twinx()
 
-    ax.set_ylabel('Temp ($^\circ$C)')
+    ax.set_ylabel('Temperature')
 #     ax2.bar(df.index,df['precipIntensity'].values,color='#3778bf',zorder=1001,width=1/24)
     ax2.plot(df.index,df['precipIntensity'].values,color=c_light_blue,zorder=1001)
     ax2.fill_between(df.index,0,df['precipIntensity'].values,alpha=0.8,color=c_light_blue)
     ax.plot(df.index,df['temperature'],color=c_yellow,zorder=1000)
-    ax2.set_ylabel('Precip (mm)')
+    ax2.set_ylabel('Precipitation')
     ax.yaxis.label.set_color(c_yellow)
     ax2.yaxis.label.set_color(c_light_blue)
     ax.spines['top'].set_visible(False)
@@ -69,9 +82,19 @@ def plot_hourly_weather(bs,date1,date2,ax=None):
     ax.tick_params(axis='x',labelrotation=45)
     ax2.tick_params(axis='x',labelrotation=45)
     
-    ax2.set_ylim(0,2.5)
+    if df['precipIntensity'].max()>2.5:
+        ymax = df['precipIntensity'].max()
+    else:
+        ymax = 2.5
+    ax2.set_ylim(0,ymax)
     
     #ax.text(0,-2.6,'Powered by Dark Sky: https://darksky.net/poweredby/',transform=ax.transAxes,fontdict={'color':'grey','style':'italic','family':'serif','size':8})
+    sns.despine(ax=ax,top=True,bottom=True,left=True,right=True)
+    sns.despine(ax=ax2,top=True,bottom=True,left=True,right=True)
+    ax.tick_params(axis='both', which='both',length=0)
+    ax2.tick_params(axis='both', which='both',length=0)
+    ax.grid(which='both')   
     
-    
+    ax.set_yticklabels([])
+    ax2.set_yticklabels([])
     return ax,ax2

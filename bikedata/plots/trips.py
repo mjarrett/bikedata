@@ -39,7 +39,9 @@ def plot_hourly_trips(bs,kind,date1,date2,date1_hl=None,date2_hl=None,ax=None):
     except:
         pass
     ax.set_ylabel('Hourly trips')
-    sns.despine()
+    sns.despine(top=True,bottom=True,left=True,right=True)
+    ax.tick_params(axis=u'both', which=u'both',length=0)
+    ax.grid(which='both')
     return ax
     
 def plot_daily_trips(bs,kind,date1,date2,ax=None):
@@ -60,19 +62,18 @@ def plot_daily_trips(bs,kind,date1,date2,ax=None):
     trips = trips.groupby(pd.Grouper(freq='d')).sum()
     trips = trips[date1:date2]
     trips.index = trips.index.tz_convert(bs.tz)
-    
+    trips.index = [x - pd.Timedelta(6,'h') for x in trips.index]
 
     ax.xaxis.set_major_locator(mdates.WeekdayLocator())
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %d'))
     ax.tick_params(axis='x',labelrotation=45)
 
     ax.bar(trips.index,trips.values,color=color)
-    try:
-        ax.xaxis.get_ticklabels()[-1].set_visible(False)
-    except:
-        pass
+
     ax.set_ylabel('Daily trips')
-    sns.despine()
+    sns.despine(top=True,bottom=True,left=True,right=True)
+    ax.tick_params(axis=u'both', which=u'both',length=0)
+    ax.grid(which='both')
     return ax
 
 
