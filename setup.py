@@ -6,5 +6,5 @@ setup(name='bikedata',
       author='Mike Jarrett',
       author_email='msjarrett@gmail.com',
       url='https://notes.mikejarrett.ca',
-      packages=['bikedata','weather','plots'],
+      packages=['bikedata','bikedata.weather','bikedata.plots'],
      )
