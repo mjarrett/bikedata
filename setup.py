@@ -1,4 +1,4 @@
-from distutils.core import setup, find_packages
+from distutils.core import setup
 
 setup(name='bikedata',
       version='0.2',
@@ -6,5 +6,5 @@ setup(name='bikedata',
       author='Mike Jarrett',
       author_email='msjarrett@gmail.com',
       url='https://notes.mikejarrett.ca',
-      packages=find_packages(),
+      packages=['bikedata','weather','plots'],
      )
