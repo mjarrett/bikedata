@@ -7,6 +7,8 @@ class BikeShareSystemData(object):
         self.workingdir = workingdir
         
         self.load()
+        
+        self.dfs = [self.taken_hourly,self.returned_hourly,self.taken_bikes,self.returned_bikes]
      
         try:
             self.stationxw = self.stations[['name','station_id']].set_index('station_id').to_dict()['name']
@@ -26,10 +28,21 @@ class BikeShareSystemData(object):
         """
         Convert data object to local timezone and human readable station names
         """
-        self.taken_hourly = cleaner(self.taken_hourly,self.stationxw,tz)
-        self.returned_hourly = cleaner(self.returned_hourly,self.stationxw,tz)
-        self.taken_bikes = cleaner(self.taken_bikes,self.stationxw,tz)
-        self.returned_bike = cleaner(self.returned_bikes,self.stationxw,tz)
+        for df in self.dfs:
+            df = cleaner(df,self.stationxw,tz)
+
+        self._clean = True
+    
+    def tz(self,tz='UTC'):
+        """
+        Convert data object to local timezone and human readable station names
+        """
+        for df in self.dfs:
+            try:
+                df.index = df.index.tz_convert(tz)
+            except:
+                return pd.DataFrame()
+            
         self._clean = True
         
     def save(self,force=False):

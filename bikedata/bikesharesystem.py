@@ -165,14 +165,19 @@ e with your daemon application of choice.
                              track_bikes=track_bikes)
     
 
-    def load_data(self,clean=False):
+    def load_data(self,clean=False, tz=False):
         
         """
         Load saved data files created by BikeShareSystem.monitor() into Pandas dataframe
+        clean=True : convert field names and timezone
+        tz=True : convert index to local timezone
         """
         self.data = BikeShareSystemData(workingdir=self.workingdir)
         if clean:
             self.data.clean(self.tz)
+            
+        if tz:
+            self.data.tz(self.tz)
             
     def now(self):
         return pd.Timestamp(dt.datetime.utcnow()).tz_localize('UTC').tz_convert(self.tz)
