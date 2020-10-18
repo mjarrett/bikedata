@@ -25,9 +25,10 @@ def plot_stations(bs,date1,date2=None,extent=None):
     color=sns.color_palette()[0]
     color2=sns.color_palette()[1]
     
-    f,ax = plt.subplots(subplot_kw={'projection': ccrs.epsg(3857)},figsize=(7,7))
+    tile = MapboxStyleTiles(bs.MAPBOX_TOKEN,'mikejarr','ckgebsspl1i8s19qukcae7yg5')
 
-    tile = MapboxStyleTiles(bs.MAPBOX_TOKEN,'mjarrett','ck3gggjkl03gp1cpfm927yo7c')
+    f,ax = plt.subplots(subplot_kw={'projection': tile.crs},figsize=(7,7))
+
 
     if extent is None:
         extent = [bs.lon_min,bs.lon_max,bs.lat_min,bs.lat_max]
@@ -53,6 +54,8 @@ def plot_stations(bs,date1,date2=None,extent=None):
     sdf = sdf.to_crs({'init': 'epsg:3857'})
     sdf.plot(ax=ax,markersize='trips',color=color,alpha=0.7)
     sdf[sdf.trips==0].plot(ax=ax,color=color2,alpha=0.7,markersize=10,marker='x')
+    
+    
     
     l1 = ax.scatter([0],[0], s=10, edgecolors='none',color=color,alpha=0.7)
     l2 = ax.scatter([0],[0], s=100, edgecolors='none',color=color,alpha=0.7)
