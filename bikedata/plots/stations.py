@@ -34,7 +34,7 @@ def plot_stations(bs,date1,date2=None,extent=None):
         extent = [bs.lon_min,bs.lon_max,bs.lat_min,bs.lat_max]
     ax.set_extent(extent)
 #     ax.add_image(tile,15,interpolation='spline36')
-    ax.add_image(tile,13)
+    ax.add_image(tile,bs.zoom)
     
     ax.outline_patch.set_visible(False)
     ax.background_patch.set_visible(False)
@@ -80,7 +80,7 @@ def plot_free_bike_map(bs,date1,date2=None):
     extent = [bs.lon_min,bs.lon_max,bs.lat_min,bs.lat_max]
     ax.set_extent(extent)
     #ax.add_image(tile,15,interpolation='spline36')
-    ax.add_image(tile,13)
+    ax.add_image(tile,bs.zoom)
     
     ax.outline_patch.set_visible(False)
     ax.background_patch.set_visible(False)
