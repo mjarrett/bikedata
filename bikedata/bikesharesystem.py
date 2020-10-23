@@ -62,7 +62,9 @@ class BikeShareSystem(object):
         
         
         self._set_canon_latlon()
-            
+
+        
+        
     def __repr__(self):
         if self.system is not None:
             return f"BikeShareSystem(system='{self.system}')"
@@ -239,6 +241,11 @@ e with your daemon application of choice.
             except:
                 pass
 
+        try:
+            self.zoom = conf.zoom
+        except:
+            self.zoom = 13
+        
         
     def _set_canon_latlon(self):
         try:
@@ -250,6 +257,9 @@ e with your daemon application of choice.
         
         try:
             df = self.query_station_info()
+            df = df[df['lat']!=0].dropna()
+            df = df[df['lon']!=0].dropna()
+             
             self.lat = df['lat'].mean()
             self.lon = df['lon'].mean()
             self.lat_min = df['lat'].min()
@@ -262,6 +272,9 @@ e with your daemon application of choice.
         
         try:
             df = self.query_bikes()
+            df = df[df['lat']!=0].dropna()
+            df = df[df['lon']!=0].dropna()
+             
             self.lat = df['lat'].mean()
             self.lon = df['lon'].mean()
             self.lat_min = df['lat'].min()
