@@ -17,7 +17,9 @@ c_green =    '#77ACA2' #// success
 def plot_daily_weather(bs,date1,date2,ax=None):
     try:
         df = bdw.get_weather_range(bs,'daily',date1,date2)
-    except:
+    except Exception as e:
+        print(f"get_weather_range(bs,'daily',{date1},{date2}) failed with the following exception")
+        print(e)
         return None
     
     if ax is None:
