@@ -5,13 +5,13 @@ import datetime as dt
 
 def query_weather_day(bs,freq,time):
     timestr = time.strftime('%Y-%m-%dT01:00:00')
-    
+
     weather_url = f'https://api.darksky.net/forecast/{bs.DARKSKY_KEY}/{bs.lat},{bs.lon},{timestr}?units=si'
     with urllib.request.urlopen(weather_url) as url:    
         data = json.loads(url.read().decode())
-        
+
     hdf = pd.DataFrame(data['hourly']['data']).set_index('time')
-    hdf.index = [dt.datetime.utcfromtimestamp(x) for x in hdf.index]
+    hdf.index = [dt.datetime.utcfromtimestamp(x,) for x in hdf.index]
     hdf.index = hdf.index.tz_localize('UTC').tz_convert(bs.tz)
 
     ddf = pd.DataFrame(data['daily']['data']).set_index('time')
@@ -44,7 +44,7 @@ def get_weather_range(bs,freq,day1,day2=None):
     if day2 is None:
         df = query_weather_day(bs,freq,day1)
     else:
-        days = list(pd.date_range(day1,day2,freq='d'))
+        days = list(pd.date_range(day1,day2,freq='d', ambiguous=True))
         df = pd.concat([query_weather_day(bs,freq,x) for x in days])
     
 
