@@ -257,8 +257,11 @@ e with your daemon application of choice.
         
         try:
             df = self.query_station_info()
+
+
             df = df[df['lat']!=0].dropna(subset=['lat','lon'])
             df = df[df['lon']!=0].dropna(subset=['lat','lon'])
+
              
             self.lat = df['lat'].mean()
             self.lon = df['lon'].mean()
@@ -272,6 +275,7 @@ e with your daemon application of choice.
         
         try:
             df = self.query_bikes()
+
             df = df[df['lat']!=0].dropna(subset=['lat','lon'])
             df = df[df['lon']!=0].dropna(subset=['lat','lon'])
              
