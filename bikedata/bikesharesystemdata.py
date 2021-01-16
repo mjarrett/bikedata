@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import sys
 import geopandas
 
 class BikeShareSystemData(object):
@@ -7,9 +8,7 @@ class BikeShareSystemData(object):
         self.workingdir = workingdir
         
         self.load()
-        
-        self.dfs = [self.taken_hourly,self.returned_hourly,self.taken_bikes,self.returned_bikes]
-     
+             
         try:
             self.stationxw = self.stations[['name','station_id']].set_index('station_id').to_dict()['name']
         except:
@@ -26,23 +25,26 @@ class BikeShareSystemData(object):
     
     def clean(self,tz='UTC'):
         """
-        Convert data object to local timezone and human readable station names
+        Convert dataframe columns to human readable station names
         """
-        for df in self.dfs:
-            df = cleaner(df,self.stationxw,tz)
 
+        self.taken_hourly = self.taken_hourly.rename(columns=self.stationxw)
+        self.returned_hourly = self.returned_hourly.rename(columns=self.stationxw)
+        self.taken_bikes = self.taken_bikes.rename(columns=self.stationxw)
+        self.returned_bikes = self.returned_bikes.rename(columns=self.stationxw)
+        
         self._clean = True
     
     def tz(self,tz='UTC'):
         """
         Convert data object to local timezone and human readable station names
         """
-        for df in self.dfs:
-            try:
-                df.index = df.index.tz_convert(tz)
-            except:
-                return pd.DataFrame()
-            
+
+        self.taken_hourly.index = self.taken_hourly.index.tz_convert(tz)
+        self.returned_hourly.index = self.returned_hourly.index.tz_convert(tz)
+        self.taken_bikes.index = self.taken_bikes.index.tz_convert(tz)
+        self.returned_bikes.index = self.returned_bikes.index.tz_convert(tz)
+                     
         self._clean = True
         
     def save(self,force=False):
@@ -88,6 +90,7 @@ def load_taken_hourly_csv(bsd):
         thdf = pd.read_csv(f'{bsd.workingdir}/data/taken_hourly.csv',index_col=0,parse_dates=['time'])
     except:
         thdf = pd.DataFrame()
+        thdf.index = pd.to_datetime(thdf.index).tz_localize('UTC') # Need to make index tz aware
     return thdf
 
 def load_returned_hourly_csv(bsd):
@@ -95,6 +98,7 @@ def load_returned_hourly_csv(bsd):
         rhdf = pd.read_csv(f'{bsd.workingdir}/data/returned_hourly.csv',index_col=0,parse_dates=['time'])
     except:
         rhdf = pd.DataFrame()
+        rhdf.index = pd.to_datetime(rhdf.index).tz_localize('UTC') # Need to make index tz aware
     return rhdf
 
 
@@ -103,6 +107,7 @@ def load_taken_bikes_csv(bsd):
         thdf = pd.read_csv(f'{bsd.workingdir}/data/taken_bikes.csv',index_col=0,parse_dates=['time'])
     except:
         thdf = pd.DataFrame()
+        thdf.index = pd.to_datetime(thdf.index).tz_localize('UTC') # Need to make index tz aware
     return thdf
 
 def load_returned_bikes_csv(bsd):
@@ -110,6 +115,7 @@ def load_returned_bikes_csv(bsd):
         rhdf = pd.read_csv(f'{bsd.workingdir}/data/returned_bikes.csv',index_col=0,parse_dates=['time'])
     except:
         rhdf = pd.DataFrame()
+        rhdf.index = pd.to_datetime(rhdf.index).tz_localize('UTC') # Need to make index tz aware
     return rhdf
 
 
@@ -127,12 +133,5 @@ def load_grid(bsd):
 
 
 
-def cleaner(df,xw,tz):
-    try:
-        df = df.rename(columns=xw)
-        df.index = df.index.tz_convert(tz)
-        return df
-    except:
-        return pd.DataFrame()
-        pass
+
     
